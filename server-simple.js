@@ -75,7 +75,8 @@ function checkHttpService(targetUrl) {
     return new Promise((resolve) => {
         const protocol = targetUrl.startsWith('https') ? require('https') : http;
         const req = protocol.get(targetUrl, { timeout: 10000 }, (res) => {
-            resolve({ online: res.statusCode === 200, statusCode: res.statusCode });
+            // 只要服务器有响应(100-599)，就算在线
+            resolve({ online: res.statusCode >= 100 && res.statusCode < 600, statusCode: res.statusCode });
         });
         req.on('error', () => {
             resolve({ online: false, statusCode: null });
