@@ -1,0 +1,14 @@
+﻿{
+  "name": "service-monitor",
+  "version": "1.0.0",
+  "description": "Local service status monitoring dashboard",
+  "main": "server-simple.js",
+  "scripts": {
+    "start": "node server-simple.js",
+    "dev": "node server-simple.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
