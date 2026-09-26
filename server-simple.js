@@ -79,7 +79,7 @@ function checkHttpService(targetUrl) {
         return new Promise((resolve) => {
             const protocol = targetUrl.startsWith('https') ? require('https') : http;
             const req = protocol.get(targetUrl, { timeout: TIMEOUT }, (res) => {
-                resolve({ online: res.statusCode >= 100 && res.statusCode < 600, statusCode: res.statusCode });
+                resolve({ online: res.statusCode >= 200 && res.statusCode < 400, statusCode: res.statusCode });
             });
             req.on('error', () => {
                 if (retriesLeft > 0) {
@@ -661,4 +661,5 @@ process.on('SIGTERM', () => {
     saveData();
     process.exit(0);
 });
+
 
