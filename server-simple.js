@@ -70,22 +70,35 @@ function generateId() {
     return idCounter++;
 }
 
-// Check HTTP service
+// Check HTTP service with retry
 function checkHttpService(targetUrl) {
-    return new Promise((resolve) => {
-        const protocol = targetUrl.startsWith('https') ? require('https') : http;
-        const req = protocol.get(targetUrl, { timeout: 10000 }, (res) => {
-            // 只要服务器有响应(100-599)，就算在线
-            resolve({ online: res.statusCode >= 100 && res.statusCode < 600, statusCode: res.statusCode });
+    const MAX_RETRIES = 2;
+    const TIMEOUT = 15000;
+    
+    function attempt(retriesLeft) {
+        return new Promise((resolve) => {
+            const protocol = targetUrl.startsWith('https') ? require('https') : http;
+            const req = protocol.get(targetUrl, { timeout: TIMEOUT }, (res) => {
+                resolve({ online: res.statusCode >= 100 && res.statusCode < 600, statusCode: res.statusCode });
+            });
+            req.on('error', () => {
+                if (retriesLeft > 0) {
+                    setTimeout(() => attempt(retriesLeft - 1).then(resolve), 1000);
+                } else {
+                    resolve({ online: false, statusCode: null });
+                }
+            });
+            req.on('timeout', () => {
+                req.destroy();
+                if (retriesLeft > 0) {
+                    setTimeout(() => attempt(retriesLeft - 1).then(resolve), 1000);
+                } else {
+                    resolve({ online: false, statusCode: null });
+                }
+            });
         });
-        req.on('error', () => {
-            resolve({ online: false, statusCode: null });
-        });
-        req.on('timeout', () => {
-            req.destroy();
-            resolve({ online: false, statusCode: null });
-        });
-    });
+    }
+    return attempt(MAX_RETRIES);
 }
 
 // Check TCP port
@@ -648,3 +661,4 @@ process.on('SIGTERM', () => {
     saveData();
     process.exit(0);
 });
+

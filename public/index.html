@@ -5,16 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>服务状态监控面板</title>
     <script>
-    // Load Chart.js with fallback
+    // Load Chart.js with local-first fallback to CDN
     window.chartLoaded = false;
-    var script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
-    script.onload = function() { window.chartLoaded = true; console.log('Chart.js loaded'); };
-    script.onerror = function() { 
-        console.warn('Chart.js CDN failed to load, charts will be disabled');
-        window.chartLoaded = false;
-    };
-    document.head.appendChild(script);
+    function loadScript(src, onLoad, onError) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = onLoad;
+        s.onerror = onError;
+        document.head.appendChild(s);
+    }
+    loadScript('chart.umd.min.js', function() {
+        window.chartLoaded = true;
+        console.log('Chart.js loaded from local');
+        initCharts();
+    }, function() {
+        console.warn('Local Chart.js failed, trying CDN...');
+        loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js', function() {
+            window.chartLoaded = true;
+            console.log('Chart.js loaded from CDN');
+            initCharts();
+        }, function() {
+            console.warn('Chart.js CDN also failed, charts disabled');
+            window.chartLoaded = false;
+        });
+    });
 </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -247,7 +261,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchServices();
             fetchSettings();
-            initCharts();
             setInterval(() => {
                 if (document.getElementById('autoCheckToggle').checked) {
                     fetchServices();
@@ -559,6 +572,11 @@
     </script>
 </body>
 </html>
+
+
+
+
+
 
 
 
